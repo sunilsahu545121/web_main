@@ -18,7 +18,10 @@ export function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      // We don't redirect here anymore. The useEffect below will handle it once the role is fetched.
+      // Fallback: if after 4 seconds we haven't redirected, stop the spinner
+      setTimeout(() => {
+        setLoading(false);
+      }, 4000);
     } catch (err) {
       toast.error((err as Error).message);
       setLoading(false);
@@ -33,10 +36,13 @@ export function LoginPage() {
       } else if (role === 'super_admin' || role === 'zone_manager') {
         navigate('/admin');
       } else {
-        navigate('/scanner'); // Or a generic fallback for other roles
+        navigate('/scanner');
       }
+    } else if (user && !role && !loading) {
+      // If we have a user but no role is loading, they might not have a profile entry.
+      // But since we can't perfectly track fetchRole state here, we rely on the 4s timeout to clear the spinner.
     }
-  }, [user, role, navigate]);
+  }, [user, role, loading, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 p-4">
