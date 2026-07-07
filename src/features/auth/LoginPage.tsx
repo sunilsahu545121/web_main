@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export function LoginPage() {
-  const { signIn, role } = useAuth();
+  const { signIn, role, user } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,17 +18,25 @@ export function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      // Role-based redirect after login
-      setTimeout(() => {
-        if (role === 'seller') navigate('/seller');
-        else navigate('/admin');
-      }, 200);
+      // We don't redirect here anymore. The useEffect below will handle it once the role is fetched.
     } catch (err) {
       toast.error((err as Error).message);
-    } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Only redirect once we have both a user AND their role has been fetched from the database
+    if (user && role) {
+      if (role === 'seller') {
+        navigate('/seller');
+      } else if (role === 'super_admin' || role === 'zone_manager') {
+        navigate('/admin');
+      } else {
+        navigate('/scanner'); // Or a generic fallback for other roles
+      }
+    }
+  }, [user, role, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 p-4">
