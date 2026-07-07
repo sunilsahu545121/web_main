@@ -3,7 +3,7 @@ import {
   LayoutDashboard, ShoppingCart, ShieldCheck, Map, Globe2,
   RotateCcw, MessageCircle, Users, Building2, FileText,
   Store, Package, ScanBarcode, Image, Tag, Calculator, Truck,
-  PieChart, Settings
+  PieChart, Settings, BellRing
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import { clsx } from 'clsx';
@@ -32,12 +32,16 @@ const NAV: NavItem[] = [
   { to: '/admin/documents', label: 'Documents', icon: FileText, roles: ['super_admin', 'zone_manager'] },
   { to: '/admin/banners', label: 'Banners', icon: Image, roles: ['super_admin'] },
   { to: '/admin/coupons', label: 'Coupons', icon: Tag, roles: ['super_admin'] },
+  { to: '/admin/payouts', label: 'Payouts & Ledger', icon: PieChart, roles: ['super_admin'] },
+  { to: '/admin/notifications', label: 'Notifications', icon: BellRing, roles: ['super_admin'] },
   { to: '/admin/reports', label: 'Reports', icon: PieChart, roles: ['super_admin'] },
   { to: '/admin/settings', label: 'Settings', icon: Settings, roles: ['super_admin'] },
   { to: '/seller', label: 'Seller Dashboard', icon: Store, roles: ['seller'] },
   { to: '/seller/products', label: 'Products', icon: Package, roles: ['seller'] },
   { to: '/seller/coupons', label: 'Coupons', icon: Tag, roles: ['seller'] },
   { to: '/seller/labels', label: 'Labels', icon: FileText, roles: ['seller'] },
+  { to: '/seller/payouts', label: 'Payouts & Ledger', icon: PieChart, roles: ['seller'] },
+  { to: '/seller/support', label: 'Support & Disputes', icon: MessageCircle, roles: ['seller'] },
   { to: '/seller/settings', label: 'Settings', icon: Settings, roles: ['seller'] },
   { to: '/scanner', label: 'Scanner', icon: ScanBarcode, roles: ['super_admin', 'zone_manager', 'seller', 'hub', 'delivery_center'] },
 ];
