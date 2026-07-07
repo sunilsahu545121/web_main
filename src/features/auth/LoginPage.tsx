@@ -5,12 +5,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export function LoginPage() {
   const { signIn, role } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -33,8 +35,8 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 p-4">
       <div className="w-full max-w-md">
-        {/* Animated Logo */}
-        <div className="mb-8 flex justify-center animate-bounce">
+        {/* Logo without bouncing delay */}
+        <div className="mb-8 flex justify-center">
           <img src="/logo.png" alt="Krixify Logo" className="h-24 object-contain drop-shadow-xl" />
         </div>
         
@@ -48,15 +50,50 @@ export function LoginPage() {
           </CardHeader>
           <CardContent className="px-8 pb-8">
             <form onSubmit={onSubmit} className="space-y-5">
-              <div className="space-y-1">
-                <Input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500" />
+              
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                  className="block w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 text-gray-900 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
+                />
               </div>
-              <div className="space-y-1">
-                <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500" />
+
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  placeholder="Password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  className="block w-full rounded-xl border border-gray-300 py-3 pl-11 pr-12 text-gray-900 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-orange-500"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
-              <Button type="submit" loading={loading} className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg shadow-orange-500/30 transition-all active:scale-95 text-lg mt-2">
-                Sign In
-              </Button>
+
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="mt-2 flex w-full items-center justify-center rounded-xl bg-orange-500 py-3 text-lg font-bold text-white shadow-lg shadow-orange-500/30 transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-70"
+              >
+                {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
               <div className="pt-4 text-center text-sm text-gray-600">
                 New seller? <a href="/onboard/seller" className="font-semibold text-orange-600 hover:text-orange-700 underline decoration-2 underline-offset-4">Register here</a>
               </div>
