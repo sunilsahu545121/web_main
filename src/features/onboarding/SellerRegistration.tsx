@@ -359,9 +359,19 @@ export function SellerRegistration() {
                   <label className="mb-1 block text-sm font-medium">Business Category *</label>
                   <select {...register('category')} required className="w-full rounded-lg border px-4 py-2.5 bg-transparent outline-none">
                     <option value="">Select category</option>
-                    <option value="grocery">Grocery</option>
-                    <option value="electronics">Electronics</option>
+                    <option value="grocery">Grocery & Essentials</option>
+                    <option value="electronics">Electronics & Mobiles</option>
                     <option value="fashion">Fashion & Apparel</option>
+                    <option value="home_kitchen">Home & Kitchen</option>
+                    <option value="health_beauty">Health & Beauty</option>
+                    <option value="books_stationery">Books & Stationery</option>
+                    <option value="sports_fitness">Sports & Fitness</option>
+                    <option value="toys_baby">Toys & Baby Products</option>
+                    <option value="automotive">Automotive Accessories</option>
+                    <option value="pet_supplies">Pet Supplies</option>
+                    <option value="hardware_tools">Hardware & Tools</option>
+                    <option value="pharmacy">Pharmacy & Medicines</option>
+                    <option value="others">Others</option>
                   </select>
                 </div>
                 <div>
