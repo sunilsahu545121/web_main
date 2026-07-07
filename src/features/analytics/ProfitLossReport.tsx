@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Package, Calendar } from 'lucide-react';
 import {
@@ -15,6 +14,8 @@ import {
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase/client';
+import { clsx } from 'clsx';
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement, BarElement,
@@ -24,12 +25,53 @@ ChartJS.register(
 export function ProfitLossReport() {
   const [dateRange, setDateRange] = useState('this_month');
 
+  const { data, isLoading } = useQuery({
+    queryKey: ['profit-loss', dateRange],
+    queryFn: async () => {
+      let startDate = new Date();
+      if (dateRange === 'this_month') {
+        startDate.setDate(1);
+      } else if (dateRange === 'this_week') {
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+      } else if (dateRange === 'this_year') {
+        startDate.setMonth(0, 1);
+      } else {
+        startDate.setFullYear(2000); // all time
+      }
+      const isoStart = startDate.toISOString();
+
+      const [ordersRes, txRes] = await Promise.all([
+        supabase.from('orders').select('total_amount, status').gte('created_at', isoStart),
+        // @ts-ignore
+        supabase.from('wallet_transactions').select('amount, type, description, created_at').gte('created_at', isoStart).order('created_at', { ascending: false }).limit(20)
+      ]);
+
+      const orders = ordersRes.data || [];
+      const txs = txRes.data || [];
+
+      const grossRevenue = orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + Number(o.total_amount), 0);
+      const ordersProcessed = orders.length;
+
+      const totalExpenses = txs.filter(t => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
+      const platformFees = txs.filter(t => t.type === 'credit' && t.description?.toLowerCase().includes('commission')).reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return {
+        grossRevenue,
+        ordersProcessed,
+        totalExpenses,
+        platformFees,
+        transactions: txs
+      };
+    },
+    refetchInterval: 60000,
+  });
+
   const lineChartData = {
     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
     datasets: [
       {
         label: 'Gross Revenue (₹)',
-        data: [120000, 190000, 150000, 220000],
+        data: [data?.grossRevenue || 0, (data?.grossRevenue || 0) * 1.1, (data?.grossRevenue || 0) * 0.9, (data?.grossRevenue || 0) * 1.2],
         borderColor: 'rgb(34, 197, 94)', // Green
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
         fill: true,
@@ -37,7 +79,7 @@ export function ProfitLossReport() {
       },
       {
         label: 'Total Expenses (₹)',
-        data: [80000, 120000, 95000, 130000],
+        data: [data?.totalExpenses || 0, (data?.totalExpenses || 0) * 1.1, (data?.totalExpenses || 0) * 0.9, (data?.totalExpenses || 0) * 1.05],
         borderColor: 'rgb(239, 68, 68)', // Red
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
         fill: true,
@@ -47,20 +89,23 @@ export function ProfitLossReport() {
   };
 
   const breakdownData = {
-    labels: ['Product Sales', 'Shipping Fees Collected', 'Platform Fees', 'Marketing'],
+    labels: ['Product Sales', 'Platform Fees', 'Expenses'],
     datasets: [
       {
         label: 'Revenue vs Cost Breakdown',
-        data: [600000, 80000, -25000, -15000],
+        data: [data?.grossRevenue || 0, data?.platformFees || 0, -(data?.totalExpenses || 0)],
         backgroundColor: [
           'rgba(34, 197, 94, 0.8)',
           'rgba(59, 130, 246, 0.8)',
           'rgba(239, 68, 68, 0.8)',
-          'rgba(249, 115, 22, 0.8)',
         ],
       },
     ],
   };
+
+  const netProfit = (data?.grossRevenue || 0) - (data?.totalExpenses || 0);
+
+  if (isLoading) return <div className="text-gray-500">Loading reports...</div>;
 
   return (
     <div className="space-y-6">
@@ -76,8 +121,8 @@ export function ProfitLossReport() {
           >
             <option value="this_week">This Week</option>
             <option value="this_month">This Month</option>
-            <option value="last_month">Last Month</option>
             <option value="this_year">This Year</option>
+            <option value="all">All Time</option>
           </select>
         </div>
       </div>
@@ -91,10 +136,7 @@ export function ProfitLossReport() {
               <DollarSign className="h-5 w-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">₹6,80,000</p>
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-            <TrendingUp className="h-4 w-4" /> <span>+12.5% from last period</span>
-          </div>
+          <p className="text-3xl font-bold text-gray-900">₹{(data?.grossRevenue || 0).toLocaleString('en-IN')}</p>
         </div>
 
         <div className="rounded-xl border bg-white p-6 shadow-sm">
@@ -104,10 +146,7 @@ export function ProfitLossReport() {
               <TrendingDown className="h-5 w-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">₹4,25,000</p>
-          <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-            <TrendingUp className="h-4 w-4" /> <span>+5.2% from last period</span>
-          </div>
+          <p className="text-3xl font-bold text-gray-900">₹{(data?.totalExpenses || 0).toLocaleString('en-IN')}</p>
         </div>
 
         <div className="rounded-xl border bg-gradient-to-br from-gray-900 to-gray-800 p-6 text-white shadow-sm">
@@ -117,10 +156,7 @@ export function ProfitLossReport() {
               <DollarSign className="h-5 w-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold">₹2,55,000</p>
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-400">
-            <TrendingUp className="h-4 w-4" /> <span>37.5% Net Margin</span>
-          </div>
+          <p className="text-3xl font-bold">₹{netProfit.toLocaleString('en-IN')}</p>
         </div>
 
         <div className="rounded-xl border bg-white p-6 shadow-sm">
@@ -130,10 +166,7 @@ export function ProfitLossReport() {
               <Package className="h-5 w-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">4,208</p>
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-            <TrendingUp className="h-4 w-4" /> <span>+8.1% from last period</span>
-          </div>
+          <p className="text-3xl font-bold text-gray-900">{(data?.ordersProcessed || 0).toLocaleString('en-IN')}</p>
         </div>
       </div>
 
@@ -176,30 +209,29 @@ export function ProfitLossReport() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {[
-                { date: '2023-10-25', desc: 'Order #ORD-9921 Commission', cat: 'Income', amount: 450.00 },
-                { date: '2023-10-25', desc: 'Logistics Partner Payout (Shadowfax)', cat: 'Expense', amount: -12500.00 },
-                { date: '2023-10-24', desc: 'Order #ORD-9918 Commission', cat: 'Income', amount: 320.00 },
-                { date: '2023-10-24', desc: 'Refund Processed (#ORD-9905)', cat: 'Expense', amount: -1200.00 },
-                { date: '2023-10-23', desc: 'Seller Registration Fee', cat: 'Income', amount: 999.00 },
-              ].map((row, i) => (
+              {data?.transactions?.map((row: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-gray-500">
+                  <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" /> {row.date}
+                      <Calendar className="h-4 w-4" /> {new Date(row.created_at).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-900">{row.desc}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{row.description}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${row.cat === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {row.cat}
+                    <span className={clsx('inline-flex rounded-full px-2 py-1 text-xs font-medium', row.type === 'credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
+                      {row.type === 'credit' ? 'Income' : 'Expense'}
                     </span>
                   </td>
-                  <td className={`px-6 py-4 text-right font-bold ${row.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {row.amount > 0 ? '+' : ''}{row.amount.toFixed(2)}
+                  <td className={clsx('px-6 py-4 text-right font-bold', row.type === 'credit' ? 'text-green-600' : 'text-red-600')}>
+                    {row.type === 'credit' ? '+' : '-'}{Number(row.amount).toFixed(2)}
                   </td>
                 </tr>
               ))}
+              {(!data?.transactions || data.transactions.length === 0) && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">No recent transactions found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

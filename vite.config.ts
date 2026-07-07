@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react-leaflet-draw']
+    include: ['react-leaflet-draw', 'leaflet-draw']
   },
   server: {
     port: 5173,
