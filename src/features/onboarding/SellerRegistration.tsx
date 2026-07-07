@@ -181,29 +181,25 @@ export function SellerRegistration() {
       if (kycError) throw kycError;
 
       if (data.payment_method === 'razorpay') {
-        const subRes = await fetch(`${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/create-subscription`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${auth.session!.access_token}`,
-          },
-          body: JSON.stringify({ plan: data.plan }),
-        });
-        const sub = await subRes.json();
-        const rzp = new window.Razorpay({
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-          subscription_id: sub.subscription_id,
-          name: 'Krixify',
-          description: 'Seller Subscription',
-          handler: (response: any) => {
-            setAppId(kycData.id);
-            setSubmitted(true);
-            toast.success('Payment successful!');
-          },
-          prefill: { name: data.owner_name, email: data.email, contact: data.phone },
-          theme: { color: '#f97316' }, // Orange-500
-        });
-        rzp.open();
+        try {
+          const rzp = new window.Razorpay({
+            key: 'rzp_test_dummy_key', // Replace with real key
+            amount: selectedPlan!.price * 100, // Amount in paise
+            currency: 'INR',
+            name: 'Krixify Seller Subscription',
+            description: `${selectedPlan!.name} Plan`,
+            handler: (response: any) => {
+              setAppId(kycData.id);
+              setSubmitted(true);
+              toast.success('Payment successful!');
+            },
+            prefill: { name: data.owner_name, email: data.email, contact: data.phone },
+            theme: { color: '#f97316' }, // Orange-500
+          });
+          rzp.open();
+        } catch (error) {
+          toast.error('Could not load payment gateway. Try Bank Transfer.');
+        }
       } else {
         setAppId(kycData.id);
         setSubmitted(true);

@@ -15,6 +15,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Polyfill for leaflet-draw in Vite environment
+(window as any).type = (window as any).type || '';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
