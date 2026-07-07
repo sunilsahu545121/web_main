@@ -72,14 +72,14 @@ export function SuperAdminDashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard title="Today's Revenue" value={`₹${kpis?.revenue.toLocaleString('en-IN')}`} icon={IndianRupee} trend="up" delta={12.4} />
-        <KPICard title="Total Orders" value={kpis?.orders ?? 0} icon={ShoppingBag} trend="up" delta={8.1} />
-        <KPICard title="Customers" value={kpis?.customers ?? 0} icon={Users} trend="neutral" delta={2.3} />
-        <KPICard title="Active Sellers" value={kpis?.sellers ?? 0} icon={Store} trend="up" delta={5.7} />
-        <KPICard title="Pending Returns" value={kpis?.returns ?? 0} icon={RotateCcw} trend="down" delta={3.2} />
-        <KPICard title="Total Zones" value={kpis?.zones ?? 0} icon={MapPin} trend="neutral" delta={0} />
-        <KPICard title="Month Revenue" value="₹42.3L" icon={TrendingUp} trend="up" delta={18.9} />
-        <KPICard title="Month Commission" value="₹3.8L" icon={Percent} trend="up" delta={11.2} />
+        <KPICard title="Today's Revenue" value={`₹${kpis?.revenue.toLocaleString('en-IN')}`} icon={IndianRupee} trend="up" delta={12.4} href="/admin/reports" />
+        <KPICard title="Total Orders" value={kpis?.orders ?? 0} icon={ShoppingBag} trend="up" delta={8.1} href="/admin/orders" />
+        <KPICard title="Customers" value={kpis?.customers ?? 0} icon={Users} trend="neutral" delta={2.3} href="#" />
+        <KPICard title="Active Sellers" value={kpis?.sellers ?? 0} icon={Store} trend="up" delta={5.7} href="/admin/kyc" />
+        <KPICard title="Pending Returns" value={kpis?.returns ?? 0} icon={RotateCcw} trend="down" delta={3.2} href="/admin/returns" />
+        <KPICard title="Total Zones" value={kpis?.zones ?? 0} icon={MapPin} trend="neutral" delta={0} href="/admin/zones" />
+        <KPICard title="Month Revenue" value="₹42.3L" icon={TrendingUp} trend="up" delta={18.9} href="/admin/reports" />
+        <KPICard title="Month Commission" value="₹3.8L" icon={Percent} trend="up" delta={11.2} href="/admin/reports" />
       </div>
 
       <Card>
