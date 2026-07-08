@@ -225,9 +225,9 @@ export function FleetManagement() {
         <RidersTable
           riders={filteredRiders}
           activeTab={activeTab}
-          onApprove={(id) => approveRider.mutate(id)}
-          onReject={(id) => rejectRider.mutate(id)}
-          onStatusChange={(id, status) => updateStatus.mutate({ id, status })}
+          onApprove={(id: string) => approveRider.mutate(id)}
+          onReject={(id: string) => rejectRider.mutate(id)}
+          onStatusChange={(id: string, status: RiderStatus) => updateStatus.mutate({ id, status })}
           isApproving={approveRider.isPending}
           isRejecting={rejectRider.isPending}
         />

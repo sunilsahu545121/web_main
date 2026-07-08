@@ -31,6 +31,47 @@ interface Notification {
   image_url: string | null;
 }
 
+type NotificationRow = {
+  id: string;
+  type: string | null;
+  title: string;
+  body: string | null;
+  data: unknown;
+  created_at: string | null;
+  image_url: string | null;
+};
+
+function notificationMeta(row: NotificationRow): Record<string, unknown> {
+  return row.data && typeof row.data === 'object' && !Array.isArray(row.data)
+    ? row.data as Record<string, unknown>
+    : {};
+}
+
+function normalizeNotification(row: NotificationRow): Notification {
+  const meta = notificationMeta(row);
+  const type = row.type === 'email' ? 'email' : 'push';
+  const status = ['draft', 'scheduled', 'sent', 'failed'].includes(String(meta.status))
+    ? meta.status as NotificationStatus
+    : 'sent';
+
+  return {
+    id: row.id,
+    type,
+    title: row.title,
+    body: row.body || '',
+    audience: (meta.audience as AudienceType) || 'all_users',
+    audience_count: Number(meta.audience_count || 1),
+    status,
+    sent_count: Number(meta.sent_count || 1),
+    open_count: Number(meta.open_count || 0),
+    click_count: Number(meta.click_count || 0),
+    scheduled_at: (meta.scheduled_at as string | null) || null,
+    sent_at: (meta.sent_at as string | null) || row.created_at,
+    created_at: row.created_at || new Date().toISOString(),
+    image_url: row.image_url,
+  };
+}
+
 const TABS = [
   { key: 'push', label: 'Send Push', icon: Bell },
   { key: 'email', label: 'Email Campaigns', icon: Mail },
@@ -401,7 +442,7 @@ function HistoryView() {
       if (filter !== 'all') query = query.eq('type', filter);
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as Notification[];
+      return (data || []).map(normalizeNotification);
     },
   });
 

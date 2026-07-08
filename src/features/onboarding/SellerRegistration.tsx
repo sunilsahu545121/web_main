@@ -107,6 +107,178 @@ export function SellerRegistration() {
     } catch { }
   };
 
+  const ensureRazorpay = () =>
+    new Promise<void>((resolve, reject) => {
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
+
+      const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      const script = existing ?? document.createElement('script');
+      const timer = window.setTimeout(() => {
+        if (window.Razorpay) resolve();
+        else reject(new Error('Razorpay checkout timed out. Seller account was not created.'));
+      }, 10000);
+
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => {
+        window.clearTimeout(timer);
+        if (window.Razorpay) resolve();
+        else reject(new Error('Razorpay checkout loaded but did not initialize. Seller account was not created.'));
+      };
+      script.onerror = () => {
+        window.clearTimeout(timer);
+        reject(new Error('Razorpay checkout could not be loaded. Check ad blocker/network and VITE_RAZORPAY_KEY_ID.'));
+      };
+      if (!existing) document.body.appendChild(script);
+    });
+
+  const createSellerApplication = async (data: typeof formValues, payment?: any) => {
+    let userId = '';
+    const { data: auth, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: { data: { full_name: data.owner_name, role: 'seller', dob: data.dob, gender: data.gender } },
+    });
+
+    if (authError) {
+      if (authError.message.toLowerCase().includes('already registered')) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (signInError) throw new Error('Payment captured, but this email is already registered with a different password. Contact support with your payment ID.');
+        userId = signInData.user!.id;
+      } else {
+        throw authError;
+      }
+    } else {
+      userId = auth.user!.id;
+    }
+
+    const upload = async (file: File, path: string) => {
+      const fullPath = `${userId}/${Date.now()}-${path}`;
+      const { error } = await supabase.storage.from('seller-docs').upload(fullPath, file, { upsert: true });
+      if (error) throw error;
+      return supabase.storage.from('seller-docs').getPublicUrl(fullPath).data.publicUrl;
+    };
+
+    const [pan, gst, aadhaarF, aadhaarB, cheque, store, owner] = await Promise.all([
+      upload(files.pan_card!, 'pan'),
+      files.gst_certificate ? upload(files.gst_certificate, 'gst') : Promise.resolve(null),
+      upload(files.aadhar_front!, 'aadhar_front'),
+      upload(files.aadhar_back!, 'aadhar_back'),
+      upload(files.cancelled_cheque!, 'cheque'),
+      upload(files.storefront_photo!, 'storefront'),
+      upload(files.owner_photo!, 'owner'),
+    ]);
+
+    const { error: kycError, data: kycData } = await (supabase as any).from('seller_kyc').insert({
+      seller_id: userId,
+      business_name: data.business_name,
+      owner_name: data.owner_name,
+      email: data.email,
+      phone: data.phone,
+      business_type: data.business_type,
+      category: data.category,
+      gst_number: data.gst_number,
+      pan_number: data.pan_number,
+      fssai_number: data.fssai_number,
+      years_in_business: data.years_in_business,
+      employees: data.employees,
+      monthly_revenue: data.monthly_revenue,
+      description: data.description,
+      address_line1: data.address_line1,
+      address_line2: data.address_line2,
+      landmark: data.landmark,
+      pincode: data.pincode,
+      city: data.city,
+      state: data.state,
+      business_address: `${data.address_line1}, ${data.address_line2}`,
+      account_holder: data.account_holder,
+      account_number_masked: `XXXX${data.account_number.slice(-4)}`,
+      ifsc: data.ifsc,
+      bank_name: data.bank_name,
+      branch: data.branch,
+      account_type: data.account_type,
+      pan_document_url: pan,
+      gst_document_url: gst,
+      aadhar_front_url: aadhaarF,
+      aadhar_back_url: aadhaarB,
+      cancelled_cheque_url: cheque,
+      storefront_photo_url: store,
+      owner_photo_url: owner,
+      plan_selected: data.plan,
+      payment_method: data.payment_method,
+      status: 'pending',
+      submitted_at: new Date().toISOString(),
+    }).select().single();
+
+    if (kycError) throw kycError;
+
+    if (payment) {
+      const now = new Date();
+      const validUntil = new Date(now);
+      validUntil.setFullYear(validUntil.getFullYear() + 1);
+      await (supabase as any).from('subscription_payments').insert({
+        seller_id: userId,
+        amount: selectedPlan!.price,
+        payment_method: 'razorpay',
+        payment_id: payment.razorpay_payment_id,
+        status: 'paid',
+        valid_from: now.toISOString(),
+        valid_until: validUntil.toISOString(),
+        metadata: {
+          plan: data.plan,
+          razorpay_order_id: payment.razorpay_order_id ?? null,
+          razorpay_signature: payment.razorpay_signature ?? null,
+        },
+      });
+    }
+
+    setAppId(kycData.id);
+    setSubmitted(true);
+  };
+
+  const openRazorpay = async (data: typeof formValues) => {
+    await ensureRazorpay();
+
+    const key = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TY2pDnxjQ1H5T8';
+    if (!key) throw new Error('Razorpay key is missing. Set VITE_RAZORPAY_KEY_ID on Vercel.');
+
+    return new Promise<void>((resolve, reject) => {
+      const rzp = new window.Razorpay({
+        key,
+        amount: selectedPlan!.price * 100,
+        currency: 'INR',
+        name: 'Krixify Seller Subscription',
+        description: `${selectedPlan!.name} Plan`,
+        prefill: { name: data.owner_name, email: data.email, contact: data.phone },
+        theme: { color: '#f97316' },
+        modal: {
+          ondismiss: () => reject(new Error('Payment cancelled. Seller account was not created.')),
+        },
+        handler: async (response: any) => {
+          try {
+            await createSellerApplication(data, response);
+            toast.success('Payment successful. Seller application submitted!');
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        },
+      });
+
+      rzp.on('payment.failed', (response: any) => {
+        reject(new Error(response?.error?.description || 'Payment failed. Seller account was not created.'));
+      });
+
+      rzp.open();
+    });
+  };
+
   const onSubmit = async (data: typeof formValues) => {
     if (!data.agreed_terms) return toast.error('You must agree to the terms');
     if (!files.pan_card || !files.aadhar_front || !files.aadhar_back || !files.cancelled_cheque || !files.storefront_photo || !files.owner_photo) {
@@ -117,116 +289,10 @@ export function SellerRegistration() {
 
     setSubmitting(true);
     try {
-      let userId = '';
-      const { data: auth, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: { data: { full_name: data.owner_name, role: 'seller', dob: data.dob, gender: data.gender } },
-      });
-      
-      if (authError) {
-        if (authError.message.toLowerCase().includes('already registered')) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: data.email,
-            password: data.password,
-          });
-          if (signInError) throw new Error('Email already registered. Please use the correct password to continue.');
-          userId = signInData.user!.id;
-        } else {
-          throw authError;
-        }
-      } else {
-        userId = auth.user!.id;
-      }
-
-      const upload = async (file: File, path: string) => {
-        const { error } = await supabase.storage.from('seller-docs').upload(`${userId}/${path}`, file);
-        if (error) throw error;
-        return supabase.storage.from('seller-docs').getPublicUrl(`${userId}/${path}`).data.publicUrl;
-      };
-
-      const [pan, gst, aadhaarF, aadhaarB, cheque, store, owner] = await Promise.all([
-        upload(files.pan_card, 'pan'),
-        files.gst_certificate ? upload(files.gst_certificate, 'gst') : Promise.resolve(null),
-        upload(files.aadhar_front, 'aadhar_front'),
-        upload(files.aadhar_back, 'aadhar_back'),
-        upload(files.cancelled_cheque, 'cheque'),
-        upload(files.storefront_photo, 'storefront'),
-        upload(files.owner_photo, 'owner'),
-      ]);
-
-      const { error: kycError, data: kycData } = await supabase.from('seller_kyc').insert({
-        seller_id: userId,
-        business_name: data.business_name,
-        business_type: data.business_type,
-        category: data.category,
-        gst_number: data.gst_number,
-        pan_number: data.pan_number,
-        fssai_number: data.fssai_number,
-        years_in_business: data.years_in_business,
-        employees: data.employees,
-        monthly_revenue: data.monthly_revenue,
-        description: data.description,
-        address_line1: data.address_line1,
-        address_line2: data.address_line2,
-        landmark: data.landmark,
-        pincode: data.pincode,
-        city: data.city,
-        state: data.state,
-        account_holder: data.account_holder,
-        account_number_masked: `XXXX${data.account_number.slice(-4)}`,
-        ifsc: data.ifsc,
-        bank_name: data.bank_name,
-        branch: data.branch,
-        account_type: data.account_type,
-        pan_document_url: pan,
-        gst_document_url: gst,
-        aadhar_front_url: aadhaarF,
-        aadhar_back_url: aadhaarB,
-        cancelled_cheque_url: cheque,
-        storefront_photo_url: store,
-        owner_photo_url: owner,
-        plan_selected: data.plan,
-        payment_method: data.payment_method,
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
-      }).select().single();
-
-      if (kycError) throw kycError;
-
       if (data.payment_method === 'razorpay') {
-        try {
-          const rzp = new window.Razorpay({
-            key: 'rzp_test_TY2pDnxjQ1H5T8', // Use a structurally valid 14-char key so the UI opens
-            amount: selectedPlan!.price * 100, // Amount in paise
-            currency: 'INR',
-            name: 'Krixify Seller Subscription',
-            description: `${selectedPlan!.name} Plan`,
-            handler: (response: any) => {
-              setAppId(kycData.id);
-              setSubmitted(true);
-              toast.success('Payment successful!');
-            },
-            prefill: { name: data.owner_name, email: data.email, contact: data.phone },
-            theme: { color: '#f97316' }, // Orange-500
-          });
-          rzp.on('payment.failed', function (response: any) {
-            toast.error(response.error.description || 'Payment failed');
-          });
-          rzp.open();
-        } catch (error) {
-          console.error("Razorpay Error:", error);
-          toast.error('Could not load Razorpay. Please check if your adblocker is blocking it or add a real API key.');
-          // As a fallback for demo, we can simulate success if Razorpay fails to load
-          if (!window.Razorpay) {
-             setAppId(kycData.id);
-             setSubmitted(true);
-             toast.success('Simulated payment success for demo purposes.');
-          }
-        }
+        await openRazorpay(data);
       } else {
-        setAppId(kycData.id);
-        setSubmitted(true);
+        await createSellerApplication(data);
       }
     } catch (err) {
       toast.error((err as Error).message);

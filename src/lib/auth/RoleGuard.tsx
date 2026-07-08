@@ -1,9 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { ReactNode } from 'react';
-import { useAuth } from './AuthProvider';
-import { Database } from '@/lib/supabase/database.types';
-
-type AppRole = Database['public']['Tables']['profiles']['Row']['role'];
+import { AppRole, useAuth } from './AuthProvider';
 
 interface RoleGuardProps {
   allowedRoles: AppRole[];

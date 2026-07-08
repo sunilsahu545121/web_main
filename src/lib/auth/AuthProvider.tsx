@@ -1,10 +1,8 @@
-// @ts-nocheck
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
-import { Database } from '@/lib/supabase/database.types';
 
-type AppRole = Database['public']['Tables']['profiles']['Row']['role'];
+export type AppRole = string;
 
 interface AuthContextValue {
   session: Session | null;
@@ -29,24 +27,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) await fetchRole(session.user.id);
       setLoading(false);
+    }).catch(() => {
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setLoading(true);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) await fetchRole(session.user.id);
       else setRole(null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   async function fetchRole(userId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
+    if (error) {
+      setRole(null);
+      return;
+    }
     setRole(data?.role ?? null);
   }
 

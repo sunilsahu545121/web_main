@@ -204,9 +204,9 @@ export function HubsCenters() {
 
       {/* Content */}
       {activeTab === 'list' && (
-        <HubList hubs={filteredHubs} isLoading={isLoading} onDelete={(id) => deleteHub.mutate(id)} />
+        <HubList hubs={filteredHubs} isLoading={isLoading} onDelete={(id: string) => deleteHub.mutate(id)} />
       )}
-      {activeTab === 'add' && <AddHubForm onSubmit={(data) => addHub.mutate(data)} isPending={addHub.isPending} />}
+      {activeTab === 'add' && <AddHubForm onSubmit={(data: Record<string, unknown>) => addHub.mutate(data)} isPending={addHub.isPending} />}
       {activeTab === 'franchisees' && (
         <FranchiseesList franchisees={franchisees} isLoading={franchiseesLoading} />
       )}

@@ -1,47 +1,55 @@
-// @ts-nocheck
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/lib/auth/AuthProvider';
 import { RoleGuard } from '@/lib/auth/RoleGuard';
 import { AppShell } from '@/components/layout/AppShell';
-import { LoginPage } from '@/features/auth/LoginPage';
-import { SuperAdminDashboard } from '@/features/dashboard/SuperAdminDashboard';
-import { SellerDashboard } from '@/features/dashboard/SellerDashboard';
-import { HubDashboard } from '@/features/dashboard/HubDashboard';
-import { OrderBoard } from '@/features/orders/OrderBoard';
-import { KYCApprovalList } from '@/features/kyc/KYCApprovalList';
-import { ZoneList } from '@/features/zones/ZoneList';
+const LoginPage = lazy(() => import('@/features/auth/LoginPage').then(m => ({ default: m.LoginPage })));
+const SuperAdminDashboard = lazy(() => import('@/features/dashboard/SuperAdminDashboard').then(m => ({ default: m.SuperAdminDashboard })));
+const SellerDashboard = lazy(() => import('@/features/dashboard/SellerDashboard').then(m => ({ default: m.SellerDashboard })));
+const HubDashboard = lazy(() => import('@/features/dashboard/HubDashboard').then(m => ({ default: m.HubDashboard })));
+const OrderBoard = lazy(() => import('@/features/orders/OrderBoard').then(m => ({ default: m.OrderBoard })));
+const KYCApprovalList = lazy(() => import('@/features/kyc/KYCApprovalList').then(m => ({ default: m.KYCApprovalList })));
+const ZoneList = lazy(() => import('@/features/zones/ZoneList').then(m => ({ default: m.ZoneList })));
 const ZoneMapPage = lazy(() => import('@/features/zones/ZoneMapPage').then(m => ({ default: m.ZoneMapPage })));
-import { BulkGeocoderPage } from '@/features/geocoder/BulkGeocoderPage';
-import { SellerPanel } from '@/features/sellers/SellerPanel';
-import { ProductCatalog } from '@/features/sellers/ProductCatalog';
-import { ReturnRefundModule } from '@/features/returns/ReturnRefundModule';
-import { LiveChatModule } from '@/features/support/LiveChatModule';
-import { StaffPermissions } from '@/features/staff/StaffPermissions';
-import { HubManagement } from '@/features/hubs/HubManagement';
-import { DocumentGenerator } from '@/features/hubs/DocumentGenerator';
-import { SellerRegistration } from '@/features/onboarding/SellerRegistration';
-import { ScanningPage } from '@/features/scanner/ScanningPage';
-import { BulkLabelPrint } from '@/features/sellers/BulkLabelPrint';
-import { LabelDesignerWrapper } from '@/features/sellers/LabelDesignerWrapper';
-import { BannerManagement } from '@/features/promotions/BannerManagement';
-import { CouponManagement } from '@/features/promotions/CouponManagement';
-import { DistanceCalculator } from '@/features/geocoder/DistanceCalculator';
-import { DeliveryCentersList } from '@/features/hubs/DeliveryCentersList';
-import { FleetManagement } from '@/features/staff/FleetManagement';
-import { ProfitLossReport } from '@/features/analytics/ProfitLossReport';
-import { SystemSettings } from '@/features/settings/SystemSettings';
-import { StoreSettings } from '@/features/settings/StoreSettings';
-import { AdminPayouts } from '@/features/accounting/AdminPayouts';
-import { SellerLedger } from '@/features/accounting/SellerLedger';
-import { NotificationCenter } from '@/features/notifications/NotificationCenter';
+const BulkGeocoderPage = lazy(() => import('@/features/geocoder/BulkGeocoderPage').then(m => ({ default: m.BulkGeocoderPage })));
+const SellerPanel = lazy(() => import('@/features/sellers/SellerPanel').then(m => ({ default: m.SellerPanel })));
+const ProductCatalog = lazy(() => import('@/features/sellers/ProductCatalog').then(m => ({ default: m.ProductCatalog })));
+const ReturnRefundModule = lazy(() => import('@/features/returns/ReturnRefundModule').then(m => ({ default: m.ReturnRefundModule })));
+const LiveChatModule = lazy(() => import('@/features/support/LiveChatModule').then(m => ({ default: m.LiveChatModule })));
+const StaffPermissions = lazy(() => import('@/features/staff/StaffPermissions').then(m => ({ default: m.StaffPermissions })));
+const HubManagement = lazy(() => import('@/features/hubs/HubManagement').then(m => ({ default: m.HubManagement })));
+const DocumentGenerator = lazy(() => import('@/features/hubs/DocumentGenerator').then(m => ({ default: m.DocumentGenerator })));
+const SellerRegistration = lazy(() => import('@/features/onboarding/SellerRegistration').then(m => ({ default: m.SellerRegistration })));
+const ScanningPage = lazy(() => import('@/features/scanner/ScanningPage').then(m => ({ default: m.ScanningPage })));
+const BulkLabelPrint = lazy(() => import('@/features/sellers/BulkLabelPrint').then(m => ({ default: m.BulkLabelPrint })));
+const LabelDesignerWrapper = lazy(() => import('@/features/sellers/LabelDesignerWrapper').then(m => ({ default: m.LabelDesignerWrapper })));
+const BannerManagement = lazy(() => import('@/features/promotions/BannerManagement').then(m => ({ default: m.BannerManagement })));
+const CouponManagement = lazy(() => import('@/features/promotions/CouponManagement').then(m => ({ default: m.CouponManagement })));
+const DistanceCalculator = lazy(() => import('@/features/geocoder/DistanceCalculator').then(m => ({ default: m.DistanceCalculator })));
+const DeliveryCentersList = lazy(() => import('@/features/hubs/DeliveryCentersList').then(m => ({ default: m.DeliveryCentersList })));
+const FleetManagement = lazy(() => import('@/features/staff/FleetManagement').then(m => ({ default: m.FleetManagement })));
+const ProfitLossReport = lazy(() => import('@/features/analytics/ProfitLossReport').then(m => ({ default: m.ProfitLossReport })));
+const SystemSettings = lazy(() => import('@/features/settings/SystemSettings').then(m => ({ default: m.SystemSettings })));
+const StoreSettings = lazy(() => import('@/features/settings/StoreSettings').then(m => ({ default: m.StoreSettings })));
+const AdminPayouts = lazy(() => import('@/features/accounting/AdminPayouts').then(m => ({ default: m.AdminPayouts })));
+const SellerLedger = lazy(() => import('@/features/accounting/SellerLedger').then(m => ({ default: m.SellerLedger })));
+const NotificationCenter = lazy(() => import('@/features/notifications/NotificationCenter').then(m => ({ default: m.NotificationCenter })));
 
-const PRIVILEGED = ['super_admin', 'zone_manager'] as const;
+const PRIVILEGED = ['super_admin', 'zone_manager'];
+
+function RouteLoading() {
+  return (
+    <div className="flex h-[70vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 export function AppRouter() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Suspense fallback={<RouteLoading />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/onboard/seller" element={<SellerRegistration />} />
@@ -66,9 +74,7 @@ export function AppRouter() {
             <Route path="/admin/zones" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><ZoneList /></RoleGuard>} />
             <Route path="/admin/zones/map" element={
               <RoleGuard allowedRoles={[...PRIVILEGED]}>
-                <Suspense fallback={<div className="flex h-[70vh] items-center justify-center">Loading map...</div>}>
-                  <ZoneMapPage />
-                </Suspense>
+                <ZoneMapPage />
               </RoleGuard>
             } />
             <Route path="/admin/geocoder" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><BulkGeocoderPage /></RoleGuard>} />
@@ -112,6 +118,7 @@ export function AppRouter() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

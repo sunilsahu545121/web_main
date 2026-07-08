@@ -52,6 +52,54 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key'];
 
+const bannerSlots: Banner['position'][] = ['home_top', 'home_middle', 'category', 'checkout'];
+
+function bannerPositionToSlot(position: number | null | undefined): Banner['position'] {
+  return bannerSlots[position ?? 0] ?? 'home_top';
+}
+
+function bannerSlotToPosition(slot: Banner['position']): number {
+  return Math.max(0, bannerSlots.indexOf(slot));
+}
+
+function bannerStatus(row: { is_active: boolean | null; start_date: string | null; end_date: string | null }): BannerStatus {
+  if (!row.is_active) return 'draft';
+  const now = Date.now();
+  const starts = row.start_date ? new Date(row.start_date).getTime() : now;
+  const ends = row.end_date ? new Date(row.end_date).getTime() : now;
+  if (starts > now) return 'scheduled';
+  if (ends < now) return 'expired';
+  return 'active';
+}
+
+function normalizeBanner(row: {
+  id: string;
+  title: string | null;
+  image_url: string;
+  link_url: string | null;
+  position: number | null;
+  is_active: boolean | null;
+  start_date: string | null;
+  end_date: string | null;
+  click_count: number | null;
+  view_count: number | null;
+  created_at: string | null;
+}): Banner {
+  return {
+    id: row.id,
+    title: row.title || 'Untitled banner',
+    image_url: row.image_url,
+    link_url: row.link_url,
+    position: bannerPositionToSlot(row.position),
+    status: bannerStatus(row),
+    start_date: row.start_date || row.created_at || new Date().toISOString(),
+    end_date: row.end_date || row.created_at || new Date().toISOString(),
+    clicks: row.click_count || 0,
+    impressions: row.view_count || 0,
+    created_at: row.created_at || new Date().toISOString(),
+  };
+}
+
 export function BannersCoupons() {
   const [activeTab, setActiveTab] = useState<TabKey>('banners');
 
@@ -109,7 +157,7 @@ function ActiveBanners() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as Banner[];
+      return (data || []).map(normalizeBanner);
     },
   });
 
@@ -266,12 +314,12 @@ function UploadBanner() {
         title: form.title,
         image_url: publicUrl,
         link_url: form.link_url || null,
-        position: form.position,
-        status: 'active',
+        position: bannerSlotToPosition(form.position),
+        is_active: true,
         start_date: form.start_date || new Date().toISOString(),
         end_date: form.end_date || new Date(Date.now() + 30 * 86400000).toISOString(),
-        clicks: 0,
-        impressions: 0,
+        click_count: 0,
+        view_count: 0,
       });
       if (dbError) throw dbError;
     },

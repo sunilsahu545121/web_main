@@ -164,10 +164,11 @@ export function SellerPanel() {
       const orders = allOrders || [];
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const orderDate = (createdAt: string | null) => createdAt ? new Date(createdAt) : new Date(0);
       return {
         total: orders.length,
-        today: orders.filter(o => new Date(o.created_at) >= today).length,
-        thisMonth: orders.filter(o => new Date(o.created_at) >= monthStart).length,
+        today: orders.filter(o => orderDate(o.created_at) >= today).length,
+        thisMonth: orders.filter(o => orderDate(o.created_at) >= monthStart).length,
         delivered: orders.filter(o => o.status === 'delivered').length,
         revenue: orders
           .filter(o => o.status === 'delivered')

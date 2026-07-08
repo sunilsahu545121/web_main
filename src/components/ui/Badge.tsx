@@ -1,10 +1,12 @@
 import { HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
 
-type Variant = 'default' | 'success' | 'warning' | 'destructive' | 'secondary' | 'outline';
+type Variant = 'default' | 'success' | 'warning' | 'destructive' | 'secondary' | 'outline' | 'info';
+type Tone = 'success' | 'warning' | 'danger' | 'destructive' | 'info' | 'secondary' | 'default';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: Variant;
+  tone?: Tone;
 }
 
 const styles: Record<Variant, string> = {
@@ -14,12 +16,25 @@ const styles: Record<Variant, string> = {
   destructive: 'bg-destructive/15 text-destructive border border-destructive/30',
   secondary: 'bg-secondary text-secondary-foreground',
   outline: 'border border-input text-foreground',
+  info: 'bg-blue-500/15 text-blue-700 border border-blue-500/30',
 };
 
-export function Badge({ className, variant = 'default', ...props }: BadgeProps) {
+const toneToVariant: Record<Tone, Variant> = {
+  default: 'default',
+  success: 'success',
+  warning: 'warning',
+  danger: 'destructive',
+  destructive: 'destructive',
+  info: 'info',
+  secondary: 'secondary',
+};
+
+export function Badge({ className, variant = 'default', tone, ...props }: BadgeProps) {
+  const resolvedVariant = tone ? toneToVariant[tone] : variant;
+
   return (
     <span
-      className={clsx('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', styles[variant], className)}
+      className={clsx('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', styles[resolvedVariant], className)}
       {...props}
     />
   );

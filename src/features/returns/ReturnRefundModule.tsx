@@ -114,7 +114,7 @@ export function ReturnRefundModule() {
   const initiateRefund = useMutation({
     mutationFn: async (returnReq: ReturnRequest) => {
       // 1. Update return status to refunded
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('return_requests')
         .update({
           status: 'refunded',

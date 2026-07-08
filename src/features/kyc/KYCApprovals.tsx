@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, CheckCircle2, XCircle, Clock, Search, Eye, Download,
@@ -80,7 +80,7 @@ export function KYCApprovals() {
 
   const approveKYC = useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('seller_kyc')
         .update({
           status: 'approved',
@@ -100,7 +100,7 @@ export function KYCApprovals() {
   const rejectKYC = useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
       if (!notes) throw new Error('Rejection reason is required');
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('seller_kyc')
         .update({
           status: 'rejected',
@@ -204,8 +204,8 @@ export function KYCApprovals() {
             <KYCCard
               key={app.id}
               application={app}
-              onApprove={(notes) => approveKYC.mutate({ id: app.id, notes })}
-              onReject={(notes) => rejectKYC.mutate({ id: app.id, notes })}
+              onApprove={(notes: string) => approveKYC.mutate({ id: app.id, notes })}
+              onReject={(notes: string) => rejectKYC.mutate({ id: app.id, notes })}
               isApproving={approveKYC.isPending}
               isRejecting={rejectKYC.isPending}
             />
@@ -392,12 +392,12 @@ function KYCDetailsModal({ application, onClose }: any) {
 function DocumentPreview({ label, url, onDownload }: any) {
   const [publicUrl, setPublicUrl] = useState<string>('');
 
-  useState(() => {
+  useEffect(() => {
     if (url) {
       const { data } = supabase.storage.from('kyc-documents').getPublicUrl(url);
       setPublicUrl(data.publicUrl);
     }
-  });
+  }, [url]);
 
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden">

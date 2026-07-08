@@ -10,9 +10,25 @@ interface Transaction {
   amount: number;
   type: 'credit' | 'debit';
   status: 'pending' | 'completed' | 'failed';
-  description: string;
-  created_at: string;
+  description: string | null;
+  created_at: string | null;
 }
+
+const normalizeTransaction = (tx: {
+  id: string;
+  amount: number;
+  type: string;
+  status: string | null;
+  description: string | null;
+  created_at: string | null;
+}): Transaction => ({
+  id: tx.id,
+  amount: Number(tx.amount || 0),
+  type: tx.type === 'debit' ? 'debit' : 'credit',
+  status: tx.status === 'failed' || tx.status === 'pending' ? tx.status : 'completed',
+  description: tx.description,
+  created_at: tx.created_at,
+});
 
 export function SellerLedger() {
   const { user } = useAuth();
@@ -40,8 +56,9 @@ export function SellerLedger() {
       toast.error('Failed to load ledger');
       console.error(error);
     } else {
-      setTransactions(data || []);
-      const total = (data || []).reduce((acc: number, t: any) => {
+      const rows = (data || []).map(normalizeTransaction);
+      setTransactions(rows);
+      const total = rows.reduce((acc: number, t) => {
         if (t.status === 'completed' && t.type === 'credit') return acc + Number(t.amount);
         if (t.status === 'completed' && t.type === 'debit') return acc - Number(t.amount);
         return acc;
@@ -132,8 +149,8 @@ export function SellerLedger() {
                 ) : (
                   transactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-gray-50">
-                      <td className="p-4">{new Date(tx.created_at).toLocaleDateString()}</td>
-                      <td className="p-4">{tx.description}</td>
+                      <td className="p-4">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '-'}</td>
+                      <td className="p-4">{tx.description || '-'}</td>
                       <td className="p-4 font-bold">
                         <span className={tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}>
                           {tx.type === 'credit' ? '+' : '-'} ₹{Number(tx.amount).toFixed(2)}
