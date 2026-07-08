@@ -117,13 +117,27 @@ export function SellerRegistration() {
 
     setSubmitting(true);
     try {
+      let userId = '';
       const { data: auth, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: { data: { full_name: data.owner_name, role: 'seller', dob: data.dob, gender: data.gender } },
       });
-      if (authError) throw authError;
-      const userId = auth.user!.id;
+      
+      if (authError) {
+        if (authError.message.toLowerCase().includes('already registered')) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
+          if (signInError) throw new Error('Email already registered. Please use the correct password to continue.');
+          userId = signInData.user!.id;
+        } else {
+          throw authError;
+        }
+      } else {
+        userId = auth.user!.id;
+      }
 
       const upload = async (file: File, path: string) => {
         const { error } = await supabase.storage.from('seller-docs').upload(`${userId}/${path}`, file);
