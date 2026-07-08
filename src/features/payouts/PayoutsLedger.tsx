@@ -289,7 +289,7 @@ export function PayoutsLedger() {
           payouts={pendingPayouts}
           isLoading={pendingLoading}
           searchQuery={searchQuery}
-          onSettle={(id) => settlePayout.mutate(id)}
+          onSettle={(id: string) => settlePayout.mutate(id)}
           isSettling={settlePayout.isPending}
         />
       )}

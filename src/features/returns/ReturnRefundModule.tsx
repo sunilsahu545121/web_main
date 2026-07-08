@@ -39,7 +39,7 @@ const STATUS_TABS: { key: ReturnStatus; label: string; color: string; bg: string
   { key: 'refunded', label: 'Refunded', color: 'green', bg: 'bg-green-50' },
 ];
 
-export function ReturnsRefunds() {
+export function ReturnRefundModule() {
   const [activeTab, setActiveTab] = useState<ReturnStatus>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReturn, setSelectedReturn] = useState<ReturnRequest | null>(null);
@@ -125,7 +125,7 @@ export function ReturnsRefunds() {
       if (updateError) throw updateError;
 
       // 2. Create wallet transaction (credit to customer)
-      const { data: walletData, error: walletError } = await supabase
+      const { data: walletData, error: walletError } = await (supabase as any)
         .from('wallets')
         .select('id, balance')
         .eq('user_id', returnReq.customer_id)
@@ -137,7 +137,7 @@ export function ReturnsRefunds() {
       let currentBalance = walletData?.balance || 0;
 
       if (!walletId) {
-        const { data: newWallet, error: createError } = await supabase
+        const { data: newWallet, error: createError } = await (supabase as any)
           .from('wallets')
           .insert({ user_id: returnReq.customer_id, balance: 0 })
           .select()
@@ -147,7 +147,7 @@ export function ReturnsRefunds() {
       }
 
       // Create transaction
-      const { error: txError } = await supabase
+      const { error: txError } = await (supabase as any)
         .from('wallet_transactions')
         .insert({
           wallet_id: walletId,
@@ -161,7 +161,7 @@ export function ReturnsRefunds() {
       if (txError) throw txError;
 
       // Update wallet balance
-      const { error: balanceError } = await supabase
+      const { error: balanceError } = await (supabase as any)
         .from('wallets')
         .update({ balance: currentBalance + returnReq.amount })
         .eq('id', walletId);

@@ -57,7 +57,7 @@ export function CouponManagement() {
       
       const { data, error } = await query;
       if (error) throw error;
-      return data as Coupon[];
+      return data as any as Coupon[];
     }
   });
 

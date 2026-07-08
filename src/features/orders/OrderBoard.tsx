@@ -206,14 +206,14 @@ export function OrderBoard() {
       ) : viewMode === 'table' ? (
         <OrderTable
           orders={filteredOrders}
-          onUpdateStatus={(id, status) => updateStatus.mutate({ orderId: id, newStatus: status })}
+          onUpdateStatus={(id: string, status: any) => updateStatus.mutate({ orderId: id, newStatus: status })}
           getNextStatus={getNextStatus}
           getStatusBadge={getStatusBadge}
         />
       ) : (
         <KanbanView
           orders={filteredOrders}
-          onUpdateStatus={(id, status) => updateStatus.mutate({ orderId: id, newStatus: status })}
+          onUpdateStatus={(id: string, status: any) => updateStatus.mutate({ orderId: id, newStatus: status })}
         />
       )}
     </div>

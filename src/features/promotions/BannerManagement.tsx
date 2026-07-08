@@ -32,7 +32,7 @@ export function BannerManagement() {
       // @ts-ignore
       const { data, error } = await supabase.from('banners').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return data as Banner[];
+      return data as any as Banner[];
     }
   });
 

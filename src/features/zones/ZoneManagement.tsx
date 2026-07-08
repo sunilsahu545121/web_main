@@ -268,7 +268,7 @@ function ZoneMap() {
             return (
               <Polygon
                 key={zone.id}
-                positions={positions}
+                positions={positions as any}
                 pathOptions={{
                   color: selectedZone?.id === zone.id ? '#dc2626' : '#4f46e5',
                   fillColor: selectedZone?.id === zone.id ? '#dc2626' : '#6366f1',

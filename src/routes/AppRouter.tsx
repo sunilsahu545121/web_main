@@ -17,7 +17,7 @@ import { SellerPanel } from '@/features/sellers/SellerPanel';
 import { ProductCatalog } from '@/features/sellers/ProductCatalog';
 import { ReturnRefundModule } from '@/features/returns/ReturnRefundModule';
 import { LiveChatModule } from '@/features/support/LiveChatModule';
-import { StaffManagement } from '@/features/staff/StaffManagement';
+import { StaffPermissions } from '@/features/staff/StaffPermissions';
 import { HubManagement } from '@/features/hubs/HubManagement';
 import { DocumentGenerator } from '@/features/hubs/DocumentGenerator';
 import { SellerRegistration } from '@/features/onboarding/SellerRegistration';
@@ -68,7 +68,7 @@ export function AppRouter() {
             <Route path="/admin/geocoder" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><BulkGeocoderPage /></RoleGuard>} />
             <Route path="/admin/returns" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><ReturnRefundModule /></RoleGuard>} />
             <Route path="/admin/support" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><LiveChatModule /></RoleGuard>} />
-            <Route path="/admin/staff" element={<RoleGuard allowedRoles={['super_admin']}><StaffManagement /></RoleGuard>} />
+            <Route path="/admin/staff" element={<RoleGuard allowedRoles={['super_admin']}><StaffPermissions /></RoleGuard>} />
             <Route path="/admin/hubs" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><HubManagement /></RoleGuard>} />
             <Route path="/admin/documents" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><DocumentGenerator /></RoleGuard>} />
             <Route path="/admin/banners" element={<RoleGuard allowedRoles={['super_admin']}><BannerManagement /></RoleGuard>} />
