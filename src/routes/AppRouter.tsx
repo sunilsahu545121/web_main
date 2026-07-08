@@ -11,7 +11,7 @@ import { HubDashboard } from '@/features/dashboard/HubDashboard';
 import { OrderBoard } from '@/features/orders/OrderBoard';
 import { KYCApprovalList } from '@/features/kyc/KYCApprovalList';
 import { ZoneList } from '@/features/zones/ZoneList';
-import { ZoneMapPage } from '@/features/zones/ZoneMapPage';
+const ZoneMapPage = lazy(() => import('@/features/zones/ZoneMapPage').then(m => ({ default: m.ZoneMapPage })));
 import { BulkGeocoderPage } from '@/features/geocoder/BulkGeocoderPage';
 import { SellerPanel } from '@/features/sellers/SellerPanel';
 import { ProductCatalog } from '@/features/sellers/ProductCatalog';
@@ -64,7 +64,13 @@ export function AppRouter() {
               </RoleGuard>
             } />
             <Route path="/admin/zones" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><ZoneList /></RoleGuard>} />
-            <Route path="/admin/zones/map" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><ZoneMapPage /></RoleGuard>} />
+            <Route path="/admin/zones/map" element={
+              <RoleGuard allowedRoles={[...PRIVILEGED]}>
+                <Suspense fallback={<div className="flex h-[70vh] items-center justify-center">Loading map...</div>}>
+                  <ZoneMapPage />
+                </Suspense>
+              </RoleGuard>
+            } />
             <Route path="/admin/geocoder" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><BulkGeocoderPage /></RoleGuard>} />
             <Route path="/admin/returns" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><ReturnRefundModule /></RoleGuard>} />
             <Route path="/admin/support" element={<RoleGuard allowedRoles={[...PRIVILEGED]}><LiveChatModule /></RoleGuard>} />
