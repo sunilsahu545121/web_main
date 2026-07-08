@@ -37,10 +37,10 @@ export function HubDashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Hub / Operations Dashboard</h1>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KPICard title="Pending Dispatch" value={kpis?.pending ?? 0} icon={Package} />
-        <KPICard title="In Transit" value={kpis?.transit ?? 0} icon={Truck} />
-        <KPICard title="COD Balance" value={`₹${kpis?.codBalance.toLocaleString('en-IN')}`} icon={IndianRupee} />
-        <KPICard title="Wallet" value={`₹${kpis?.walletBalance.toLocaleString('en-IN')}`} icon={Wallet} />
+        <KPICard title="Pending Dispatch" value={kpis?.pending ?? 0} icon={Package} href="/hub/orders" />
+        <KPICard title="In Transit" value={kpis?.transit ?? 0} icon={Truck} href="/hub/orders" />
+        <KPICard title="COD Balance" value={`₹${kpis?.codBalance.toLocaleString('en-IN')}`} icon={IndianRupee} href="/hub/ledger" />
+        <KPICard title="Wallet" value={`₹${kpis?.walletBalance.toLocaleString('en-IN')}`} icon={Wallet} href="/hub/ledger" />
       </div>
       <Card>
         <CardHeader><CardTitle>Dispatch Queue</CardTitle></CardHeader>

@@ -158,14 +158,14 @@ export function SellerDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KPICard title="Orders Today" value={data.ordersToday} icon={ShoppingBag} colorClass="from-blue-500 to-blue-600" />
-        <KPICard title="Month Revenue" value={`₹${data.monthRevenue.toLocaleString('en-IN')}`} icon={IndianRupee} colorClass="from-green-500 to-green-600" />
-        <KPICard title="Your Earnings" value={`₹${data.monthEarnings.toLocaleString('en-IN')}`} icon={Coins} colorClass="from-purple-500 to-purple-600" />
-        <KPICard title="Total Products" value={data.totalProducts} icon={Package} colorClass="from-orange-500 to-orange-600" />
-        <KPICard title="Active Products" value={data.activeProducts} icon={CheckCircle2} colorClass="from-green-500 to-green-600" />
-        <KPICard title="Low Stock" value={data.lowStockProducts.length} icon={AlertTriangle} colorClass="from-red-500 to-red-600" />
+        <KPICard title="Orders Today" value={data.ordersToday} icon={ShoppingBag} colorClass="from-blue-500 to-blue-600" href="/seller/orders" />
+        <KPICard title="Month Revenue" value={`₹${data.monthRevenue.toLocaleString('en-IN')}`} icon={IndianRupee} colorClass="from-green-500 to-green-600" href="/seller/ledger" />
+        <KPICard title="Your Earnings" value={`₹${data.monthEarnings.toLocaleString('en-IN')}`} icon={Coins} colorClass="from-purple-500 to-purple-600" href="/seller/ledger" />
+        <KPICard title="Total Products" value={data.totalProducts} icon={Package} colorClass="from-orange-500 to-orange-600" href="/seller/catalog" />
+        <KPICard title="Active Products" value={data.activeProducts} icon={CheckCircle2} colorClass="from-green-500 to-green-600" href="/seller/catalog" />
+        <KPICard title="Low Stock" value={data.lowStockProducts.length} icon={AlertTriangle} colorClass="from-red-500 to-red-600" href="/seller/catalog" />
         <KPICard title="Customers" value={data.totalCustomers} icon={Users} colorClass="from-blue-500 to-blue-600" />
-        <KPICard title="Subscription" value={`${data.subscriptionDaysLeft}d left`} icon={Crown} colorClass="from-yellow-500 to-yellow-600" />
+        <KPICard title="Subscription" value={`${data.subscriptionDaysLeft}d left`} icon={Crown} colorClass="from-yellow-500 to-yellow-600" href="/seller/settings" />
       </div>
 
       {/* Charts */}
