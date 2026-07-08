@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { AppRouter } from './routes/AppRouter';
 import './styles/globals.css';
+import 'leaflet/dist/leaflet.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
